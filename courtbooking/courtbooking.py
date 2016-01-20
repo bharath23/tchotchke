@@ -240,7 +240,6 @@ def main():
         bcsc_reserve_court(args.user, args.password, args.start_time, args.end_time)
 
     if display is not None:
-        print
         display.stop()
 
 if __name__ == "__main__":
