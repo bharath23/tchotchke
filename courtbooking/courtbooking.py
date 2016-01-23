@@ -2,7 +2,6 @@
 """
 Book courts using the bay club
 """
-import atexit
 import datetime
 import argparse
 import logging
@@ -213,8 +212,6 @@ def main():
     """
     Entry point
     """
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-                        format="[%(asctime)s %(levelname)s] %(message)s")
     parser = argparse.ArgumentParser()
     parser.add_argument("--club", choices=['bccu', 'bcsc'], default="bccu",
                         help="Which gym for the court booking")
@@ -228,16 +225,25 @@ def main():
                         help="End time for booking - format HH:MM AM/PM")
     parser.add_argument("--headless", action="store_true",
                         help="Run in headless mode without requiring display")
+    parser.add_argument("--logfile", help="Log file to be used for logging")
     args = parser.parse_args()
+    if args.logfile is not None:
+        logging.basicConfig(filename=args.logfile, level=logging.INFO,
+                            format="[%(asctime)s %(levelname)s] %(message)s")
+    else:
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+                            format="[%(asctime)s %(levelname)s] %(message)s")
     display = None
     if args.headless:
-        display = Display(visible=False, size=(1280,800))
+        display = Display(visible=False, size=(1280, 800))
         display.start()
 
     if args.club == "bccu":
-        bccu_reserve_court(args.user, args.password, args.start_time, args.end_time)
+        bccu_reserve_court(args.user, args.password, args.start_time,
+                           args.end_time)
     elif args.club == "bcsc":
-        bcsc_reserve_court(args.user, args.password, args.start_time, args.end_time)
+        bcsc_reserve_court(args.user, args.password, args.start_time,
+                           args.end_time)
 
     if display is not None:
         display.stop()
