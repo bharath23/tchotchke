@@ -76,7 +76,7 @@ def court_booking_login(user, passwd):
     """
     browser = Browser()
     browser.visit("https://courtbooking.bayclubs.com")
-    if browser.status_code.code != 200:
+    if browser.status_code != 200:
         logging.error("court_booking_login: Unable to open court booking "
                       "website")
         browser.quit()
@@ -88,7 +88,7 @@ def court_booking_login(user, passwd):
     input_passwd.fill(passwd)
     login_button = browser.find_by_id("loginButton")
     login_button.click()
-    if browser.status_code.code != 200:
+    if browser.status_code != 200:
         logging.error("court_booking_login: Error unable to login into court "
                       "booking website")
         browser.quit()
@@ -167,7 +167,7 @@ def bccu_reserve_court(user, passwd, start, end):
 
     date_select = browser.find_by_id("myid")
     date_select.select(datetime.datetime.strftime(booking_date, "%Y-%m-%d"))
-    if browser.status_code.code != 200 and browser.status_code.code != 302:
+    if browser.status_code != 200 and browser.status_code != 302:
         logging.error("bccu_reserve_court: status_code: %s",
                       browser.status_code)
         logging.error("bccu_reserve_court: Unable to get court booking page "
