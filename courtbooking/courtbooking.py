@@ -2,14 +2,42 @@
 """
 Book courts using the bay club
 """
-import datetime
 import argparse
+import datetime
 import logging
 import sys
 import time
 
+from netrc import netrc
+from smtplib import SMTP
+
 from pyvirtualdisplay import Display
 from splinter import Browser
+
+GMAIL_SMTP_HOST = "smtp.gmail.com"
+GMAIL_SMTP_PORT = 587
+
+def send_courtbooking_mail(recp, sub):
+    """
+    Send email to recepient about courtbooking attempt
+    """
+    creds = netrc()
+    login, _, passwd = creds.authenticators(GMAIL_SMTP_HOST)
+    if login is None or passwd is None:
+        logging.error("send_courtbooking_mail: Unable to get login and password "
+                      "from netrc")
+        return
+    smtp = SMTP(GMAIL_SMTP_HOST, GMAIL_SMTP_PORT)
+    smtp.starttls()
+    smtp.login(login, passwd)
+    headers = "\r\n".join(["from: " + login,
+                           "to: " + recp,
+                           "subject: " + sub,
+                           "mime-version: 1.0",
+                           "content-type: text/plain"])
+    mail = headers
+    smtp.sendmail(login, recp, mail)
+    smtp.quit()
 
 def wait_for_browser_element(element, timeout):
     """
@@ -143,13 +171,16 @@ def bccu_reserve_court(user, passwd, start, end):
     """
     booking_date = datetime.date.today() + datetime.timedelta(days=7)
     court_ids = gen_bccu_court_ids(booking_date, start, end)
+    subject = ""
     if len(court_ids) == 0:
         logging.error("bccu_reserve_court: Empty court_ids")
+        subject = "[courtbooking] no bookable court for given start and end" \
+                  " time"
         return
 
     browser = court_booking_login(user, passwd)
     if browser is None:
-        logging.error("bccu_reserve_court: Login into court booking website "
+        logging.error("bccu_reserve_court: Login into court booking website " \
                       "failed.")
         return
 
@@ -175,6 +206,8 @@ def bccu_reserve_court(user, passwd, start, end):
         browser.quit()
         return
 
+    subject = "[courtbooking] unable to reserve a court successfully, check" \
+              " manually"
     for court_id in court_ids:
         court = browser.find_by_id(court_id)
         if len(court) == 0:
@@ -182,10 +215,12 @@ def bccu_reserve_court(user, passwd, start, end):
 
         if book_court(browser, court):
             logging.info("bccu_reserve_court: Court successfully booked")
+            subject = "[courtbooking] court reserved successfully"
             break
 
         time.sleep(3)
 
+    send_courtbooking_mail(user, subject)
     browser.quit()
 
 def bcsc_reserve_court(user, passwd, start, end):
