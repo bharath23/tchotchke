@@ -4,6 +4,7 @@ Book courts using the bay club
 """
 import argparse
 import datetime
+import errno
 import logging
 import sys
 import time
@@ -24,7 +25,9 @@ def send_courtbooking_mail(recp, sub):
     try:
         creds = netrc()
         login, _, passwd = creds.authenticators(GMAIL_SMTP_HOST)
-    except (FileNotFoundError, IOError) as err:
+    except (OSError, IOError) as err:
+        if err.errno != errno.ENOENT:
+            raise
         logging.error("send_courtbooking_email: {}".format(err))
         return
     except TypeError as err:
