@@ -21,8 +21,16 @@ def send_courtbooking_mail(recp, sub):
     """
     Send email to recepient about courtbooking attempt
     """
-    creds = netrc()
-    login, _, passwd = creds.authenticators(GMAIL_SMTP_HOST)
+    try:
+        creds = netrc()
+        login, _, passwd = creds.authenticators(GMAIL_SMTP_HOST)
+    except (FileNotFoundError, IOError) as err:
+        logging.error("send_courtbooking_email: {}".format(err))
+        return
+    except TypeError as err:
+        logging.error("send_courtbooking_email: Unable to find host {} in" \
+                      " netrc".format(GMAIL_SMTP_HOST))
+        return
     if login is None or passwd is None:
         logging.error("send_courtbooking_mail: Unable to get login and password "
                       "from netrc")
@@ -176,6 +184,7 @@ def bccu_reserve_court(user, passwd, start, end):
         logging.error("bccu_reserve_court: Empty court_ids")
         subject = "[courtbooking] no bookable court for given start and end" \
                   " time"
+        send_courtbooking_mail(user, subject)
         return
 
     browser = court_booking_login(user, passwd)
