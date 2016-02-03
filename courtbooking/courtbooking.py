@@ -28,11 +28,11 @@ def send_courtbooking_mail(recp, sub):
     except (OSError, IOError) as err:
         if err.errno != errno.ENOENT:
             raise
-        logging.error("send_courtbooking_email: {}".format(err))
+        logging.error("send_courtbooking_email: %s", err)
         return
     except TypeError as err:
-        logging.error("send_courtbooking_email: Unable to find host {} in" \
-                      " netrc".format(GMAIL_SMTP_HOST))
+        logging.error("send_courtbooking_email: Unable to find host %s in" \
+                      " netrc", GMAIL_SMTP_HOST)
         return
     if login is None or passwd is None:
         logging.error("send_courtbooking_mail: Unable to get login and password "
@@ -176,11 +176,11 @@ def gen_bccu_court_ids(date, start, end):
 
     return ids
 
-def bccu_reserve_court(user, passwd, start, end):
+def bccu_reserve_court(user, passwd, start, end, days):
     """
     Reserve a court at the Cupertino club
     """
-    booking_date = datetime.date.today() + datetime.timedelta(days=7)
+    booking_date = datetime.date.today() + datetime.timedelta(days=days)
     court_ids = gen_bccu_court_ids(booking_date, start, end)
     subject = ""
     if len(court_ids) == 0:
@@ -235,7 +235,7 @@ def bccu_reserve_court(user, passwd, start, end):
     send_courtbooking_mail(user, subject)
     browser.quit()
 
-def bcsc_reserve_court(user, passwd, start, end):
+def bcsc_reserve_court(user, passwd, start, end, days):
     """
     Reserve a court at the Santa Clara club
     """
@@ -270,6 +270,8 @@ def main():
                         help="Start time for booking - format HH:MM AM/PM")
     parser.add_argument("--end-time", type=validate_time, required=True,
                         help="End time for booking - format HH:MM AM/PM")
+    parser.add_argument("--days-ahead", type=int, required=False, default=3,
+                        help="Number of days ahead for booking (default: 3)")
     parser.add_argument("--headless", action="store_true",
                         help="Run in headless mode without requiring display")
     parser.add_argument("--logfile", help="Log file to be used for logging")
@@ -287,10 +289,10 @@ def main():
 
     if args.club == "bccu":
         bccu_reserve_court(args.user, args.password, args.start_time,
-                           args.end_time)
+                           args.end_time, args.days_ahead)
     elif args.club == "bcsc":
         bcsc_reserve_court(args.user, args.password, args.start_time,
-                           args.end_time)
+                           args.end_time, args.days_ahead)
 
     if display is not None:
         display.stop()
