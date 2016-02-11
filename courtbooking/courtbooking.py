@@ -194,17 +194,25 @@ def bccu_reserve_court(user, passwd, start, end, days):
     if browser is None:
         logging.error("bccu_reserve_court: Login into court booking website " \
                       "failed.")
+        subject = "[courtbooking] Login failed"
+        send_courtbooking_mail(user, subject)
         return
 
     # Location id 3 - BCCU, 17 - BCSC
     if not browser.is_element_present_by_id("squashlocation", wait_time=10):
         logging.error("bccu_reserve_court: Unable to get club selection")
+        browser.quit()
+        subject = "[courtbooking] Unable to get club selection"
+        send_courtbooking_mail(user, subject)
         return
 
     location = browser.find_by_id("squashlocation")
     location.select("3")
     if not browser.is_element_present_by_id("myid", wait_time=10):
         logging.error("bccu_reserve_court: Unable to get date selection")
+        browser.quit()
+        subject = "[courtbooking] Unable to get date selection"
+        send_courtbooking_mail(user, subject)
         return
 
     date_select = browser.find_by_id("myid")
@@ -216,6 +224,8 @@ def bccu_reserve_court(user, passwd, start, end, days):
                       "for %s", datetime.datetime.strftime(booking_date,
                                                            "%Y-%m-%d"))
         browser.quit()
+        subject = "[courtbooking] Unable to get court booking page"
+        send_courtbooking_mail(user, subject)
         return
 
     subject = "[courtbooking] unable to reserve a court successfully, check" \
